@@ -5,7 +5,7 @@ from sklearn.svm import SVC
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sn
-from sklearn.metrics import roc_curve
+from sklearn.metrics import roc_curve , auc
 from sklearn.metrics import zero_one_loss
 from sklearn.neural_network import MLPClassifier
 import math 
@@ -14,14 +14,23 @@ import math
 
 data = pd.read_csv("H:\\Data sets\\HR_comma_sep.csv")
 
+"""
+
+print(data.head)
+print(data.info())
+print(data.isnull().sum()) 
+print(data.shape)
 
 
-#print(data.head)
-#print(data.info())
-#print(data.isnull().sum()) 
-#print(data.shape)
 
+corr  = data.corr()
+f = plt.figure(figsize = (16,8))
+mask = np.zeros_like(corr)
+mask[np.triu_indices_from(mask)] = True
+with sn.axes_style("white"):
+    ax1 = sn.heatmap(corr, annot=True, mask=mask, cbar_kws={'label': 'correlation heatmap'})
 
+"""
 
 max_threshold = data["satisfaction_level"].quantile(0.999)
 min_threshold = data["satisfaction_level"].quantile(0.001)
@@ -73,12 +82,12 @@ model = SVC(C=20,kernel="rbf",degree=3,coef0=1.5,gamma="auto")
 model.fit(x_train,y_train)
 print("The accuracy of SVC is :",math.ceil(100*model.score(x_test,y_test)),"%")
 
+y_pred = model.predict(x_test).ravel()
+nn_fpr_keras, nn_tpr_keras, nn_thresholds_keras = roc_curve(y_test  , y_pred)
+auc_keras = auc(nn_fpr_keras, nn_tpr_keras)
+plt.plot(nn_fpr_keras, nn_tpr_keras, marker='.', label='SVM' % auc_keras)
+plt.show()
 
-cm = confusion_matrix(y_test,model.predict(x_test))
-plt.figure(figsize=(7,5))
-sn.heatmap(cm,annot=True)
-plt.xlabel("predict")
-plt.ylabel("truth")
 
 fpr,tpr,threshold = roc_curve(y_test,model.predict(x_test))
 print("Fpr is :",fpr,"\n tpr is :",tpr,"\n threshold is :",threshold)
@@ -93,6 +102,19 @@ model2 = MLPClassifier(activation="tanh",solver="adam",learning_rate="constant",
 model2.fit(x_train,y_train)
 print("the accuracy of ANN is : ",math.ceil(100*model2.score(x_test,y_test)),"%")
 
+
+y_pred = model2.predict(x_test).ravel()
+nn_fpr_keras, nn_tpr_keras, nn_thresholds_keras = roc_curve(y_test  , y_pred)
+auc_keras = auc(nn_fpr_keras, nn_tpr_keras)
+plt.plot(nn_fpr_keras, nn_tpr_keras, marker='.', label='SVM' % auc_keras)
+plt.show()
+
+
+cm = confusion_matrix(y_test,model.predict(x_test))
+plt.figure(figsize=(7,5))
+sn.heatmap(cm,annot=True)
+plt.xlabel("predict")
+plt.ylabel("truth")
 
 cm2 = confusion_matrix(y_test,model2.predict(x_test))
 plt.figure(figsize=(7,5))
